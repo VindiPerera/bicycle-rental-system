@@ -1,5 +1,7 @@
 <?php
 session_start();
-session_destroy();
+require_once 'inc/functions.php';
+
+logoutUser();
 header("Location: login.php");
 exit;
