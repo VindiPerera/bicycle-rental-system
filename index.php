@@ -92,49 +92,98 @@ include 'inc/header.php';
         </div>
 
         <!-- Step 2: Enter Customer Details -->
-        <div id="userDetailsForm" class="mb-6 hidden">
-            <label class="block text-lg font-bold text-black mb-3">Step 2: Enter Customer Details</label>
-            <form method="POST" class="space-y-4">
-                <input type="hidden" name="action" value="confirm_order">
-                <input type="hidden" name="bicycle_type_id" id="selectedBicycleTypeId">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-black mb-2">Customer Name</label>
-                        <input type="text" name="customer_name" required 
-                               class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-red-500">
+        <div id="userDetailsForm" class="mb-8 hidden">
+            <div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200 mb-6 shadow-inner">
+                <div class="flex items-center mb-6">
+                    <div class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold mr-4 shadow-lg">
+                        2
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-black mb-2">Phone Number</label>
-                        <input type="tel" name="customer_phone" required 
-                               class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-black mb-2">NIC Number</label>
-                        <input type="text" name="customer_nic" required 
-                               class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-red-500" 
-                               placeholder="Enter NIC">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-black mb-2">Payment Method</label>
-                        <select name="payment_method" required 
-                                class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-red-500">
-                            <option value="">Select method...</option>
-                            <option value="cash">💵 Cash</option>
-                            <option value="card">💳 Card</option>
-                            <option value="mobile">📱 Mobile</option>
-                            <option value="bank_transfer">🏦 Bank</option>
-                        </select>
-                    </div>
+                    <h3 class="text-2xl font-bold text-black">Enter Customer Details</h3>
                 </div>
                 
-                <div class="flex justify-center pt-4">
-                    <button type="submit" name="action" value="confirm_order" 
-                            class="bg-black text-white py-3 px-8 rounded-lg hover:bg-gray-800 font-bold text-lg">
-                        Confirm Order & Process Payment
-                    </button>
-                </div>
-            </form>
+                <form method="POST" class="space-y-6">
+                    <input type="hidden" name="action" value="confirm_order">
+                    <input type="hidden" name="bicycle_type_id" id="selectedBicycleTypeId">
+                    <!-- Payment Method - Hidden field set to cash -->
+                    <input type="hidden" name="payment_method" value="cash">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-2">
+                            <label class="flex items-center text-sm font-bold text-black mb-3">
+                                <span class="bg-red-500 text-white p-1.5 rounded-full mr-3 shadow-sm">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </span>
+                                Customer Name
+                            </label>
+                            <input type="text" name="customer_name" required 
+                                   class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md font-medium"
+                                   placeholder="Enter full name">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="flex items-center text-sm font-bold text-black mb-3">
+                                <span class="bg-red-500 text-white p-1.5 rounded-full mr-3 shadow-sm">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                                    </svg>
+                                </span>
+                                Phone Number
+                            </label>
+                            <input type="tel" name="customer_phone" required 
+                                   class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md font-medium"
+                                   placeholder="Enter phone number">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="flex items-center text-sm font-bold text-black mb-3">
+                                <span class="bg-red-500 text-white p-1.5 rounded-full mr-3 shadow-sm">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </span>
+                                NIC Number
+                            </label>
+                            <input type="text" name="customer_nic" required 
+                                   class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md font-medium"
+                                   placeholder="Enter NIC number">
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method Display -->
+                    <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="bg-green-500 text-white p-2 rounded-full mr-4 shadow-sm">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"></path>
+                                    </svg>
+                                </span>
+                                <div>
+                                    <p class="text-sm font-bold text-black">Payment Method</p>
+                                    <p class="text-xs text-gray-600">Automatically set to cash payment</p>
+                                </div>
+                            </div>
+                            <div class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-bold">
+                                💵 Cash Payment
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center pt-6">
+                        <button type="submit" name="action" value="confirm_order" 
+                                class="bg-gradient-to-r from-black to-gray-800 text-white py-4 px-12 rounded-xl hover:from-gray-800 hover:to-black font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border-2 border-black">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                Confirm Order & Process Payment
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
         </div>
     </div>
@@ -395,7 +444,7 @@ include 'inc/header.php';
                 <button type="button" 
                         onclick="confirmCloseRental()" 
                         class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors font-semibold">
-                    Yes, Close Rental
+                    Close Rental
                 </button>
             </div>
         </div>
@@ -476,10 +525,10 @@ unset($_SESSION['rental_calculation']); // Clear after use
                     <?php endif; ?>
                     
                     <hr class="border-gray-300">
-                    <div class="flex justify-between items-center text-base">
+                    <!-- <div class="flex justify-between items-center text-base">
                         <span class="font-bold">Total Amount:</span>
                         <span class="font-bold text-red-600 text-lg"><?php echo formatCurrency($calc['total_amount']); ?></span>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             
@@ -635,15 +684,73 @@ function closeCalculationModal() {
 }
 
 function printBill() {
+    // Get calculation data from the modal
+    const customerName = document.querySelector('#calculationModal .bg-gray-50 .space-y-2 .flex:nth-child(1) span:nth-child(2)').textContent;
+    const orderId = document.querySelector('#calculationModal .bg-gray-50 .space-y-2 .flex:nth-child(2) span:nth-child(2)').textContent;
+    const bicycleType = document.querySelector('#calculationModal .bg-gray-50 .space-y-2 .flex:nth-child(3) span:nth-child(2)').textContent;
+    const actualDuration = document.querySelector('#calculationModal .bg-white .space-y-2 .flex:nth-child(1) span:nth-child(2)').textContent;
+    const baseDuration = document.querySelector('#calculationModal .bg-white .space-y-2 .flex:nth-child(2) span:nth-child(2)').textContent;
+    const baseAmount = document.querySelector('#calculationModal .bg-white .space-y-2 .flex:nth-child(3) span:nth-child(2)').textContent;
+    const extraMinutes = document.querySelector('#calculationModal .bg-red-50 .flex:nth-child(1) span:nth-child(2)')?.textContent || '0 min';
+    const extraCharges = document.querySelector('#calculationModal .bg-red-50 .flex:nth-child(2) span:nth-child(2)')?.textContent || 'Rs. 0.00';
+    
     const printContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h2>🚴 Bicycle Rental System</h2>
-                <h3>EXTRA CHARGES BILL</h3>
-                <p>${new Date().toLocaleString()}</p>
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ddd;">
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+                <h2 style="margin: 0; font-size: 20px; color: #000;">🚴 Bicycle Rental System</h2>
+                <h3 style="margin: 5px 0; font-size: 16px; color: #dc2626;">EXTRA CHARGES BILL</h3>
+                <p style="margin: 5px 0; font-size: 12px; color: #666;">${new Date().toLocaleString()}</p>
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <p style="font-size: 12px;">Thank you for using our service!</p>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px;">
+                    <span style="font-weight: 600;">Order ID:</span>
+                    <span style="font-weight: 700; word-break: break-all;">${orderId}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px;">
+                    <span style="font-weight: 600;">Customer:</span>
+                    <span style="word-break: break-words; max-width: 60%; text-align: right;">${customerName}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px;">
+                    <span style="font-weight: 600;">Bicycle Type:</span>
+                    <span style="font-weight: 700; color: #dc2626;">${bicycleType}</span>
+                </div>
+            </div>
+            
+            <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
+                <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700;">📊 Calculation Details:</h4>
+                
+                <div style="margin-bottom: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                        <span style="font-weight: 600;">Actual Duration:</span>
+                        <span style="font-weight: 700;">${actualDuration}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                        <span style="font-weight: 600;">Base Duration:</span>
+                        <span>${baseDuration}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                        <span style="font-weight: 600;">Base Amount:</span>
+                        <span style="font-weight: 700; color: #16a34a;">${baseAmount}</span>
+                    </div>
+                </div>
+                
+                <hr style="border: none; border-top: 1px solid #dc2626; margin: 8px 0;">
+                <div style="background-color: #fef2f2; padding: 8px; border-radius: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #b91c1c;">
+                        <span style="font-weight: 600;">Extra Minutes:</span>
+                        <span style="font-weight: 700;">${extraMinutes}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #b91c1c;">
+                        <span style="font-weight: 600;">Extra Charges:</span>
+                        <span style="font-weight: 700;">${extraCharges}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; border-top: 2px solid #000; padding-top: 10px;">
+                <p style="font-size: 12px; margin: 5px 0; color: #dc2626; font-weight: 600;">⚠️ Extra charges applied for overtime usage</p>
+                <p style="font-size: 10px; margin: 10px 0 0 0; color: #666;">Thank you for using our service!</p>
             </div>
         </div>
     `;
@@ -651,7 +758,15 @@ function printBill() {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <html>
-        <head><title>Extra Charges Bill</title></head>
+        <head>
+            <title>Extra Charges Bill</title>
+            <style>
+                body { margin: 0; padding: 20px; }
+                @media print {
+                    body { margin: 0; }
+                }
+            </style>
+        </head>
         <body onload="window.print(); window.close();">
             ${printContent}
         </body>

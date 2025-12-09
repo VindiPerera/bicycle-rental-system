@@ -79,7 +79,7 @@ function getAllBicycleTypes() {
 }
 
 // Function to start a new rental
-function startRental($bicycle_type_id, $customer_name, $customer_phone, $customer_nic, $user_id, $order_id = null) {
+function startRental($bicycle_type_id, $customer_name, $customer_phone, $customer_nic, $user_id) {
     global $conn;
     
     // Get bicycle type details
@@ -92,7 +92,7 @@ function startRental($bicycle_type_id, $customer_name, $customer_phone, $custome
         return false;
     }
     
-    $bill_number = $order_id ?: generateBillNumber();
+    $bill_number = generateBillNumber();
     $start_time = date('Y-m-d H:i:s');
     $total_amount = $bicycle_type['base_price'];
     
@@ -228,14 +228,7 @@ function formatCurrency($amount) {
 
 
 
-// Function to add bicycle to open bikes (start rental with order ID)
-function addOpenBike($bicycle_type_id, $customer_name, $customer_phone, $user_id, $order_id = null) {
-    if (!$order_id) {
-        $order_id = 'ORD-' . date('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-    }
-    
-    return startRental($bicycle_type_id, $customer_name, $customer_phone, $user_id, $order_id);
-}
+
 
 // Function to get pending bills for billing process
 function getPendingBills($limit = 20) {
@@ -329,7 +322,7 @@ function calculateCurrentCharges($bill_id) {
 
 // Function to handle confirm order action
 function handleConfirmOrder($bicycle_type_id, $customer_name, $customer_phone, $customer_nic, $user_id, $payment_method) {
-    $bill_id = startRental($bicycle_type_id, $customer_name, $customer_phone, $customer_nic, $user_id, null);
+    $bill_id = startRental($bicycle_type_id, $customer_name, $customer_phone, $customer_nic, $user_id);
     if ($bill_id) {
         // Process payment
         $payment_result = processPayment($bill_id, $user_id, $payment_method);
@@ -525,6 +518,517 @@ function handleSettingsActions() {
             }
         }
     }
+}
+
+// Daily Report Functions
+
+// Function to get daily report data
+function getDailyReport($date) {
+    global $conn;
+    
+    $sql = "SELECT b.*, bt.type_name 
+            FROM bills b 
+            JOIN bicycle_types bt ON b.bicycle_type_id = bt.id 
+            WHERE DATE(b.start_time) = ?
+            ORDER BY b.start_time DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+// Function to get daily statistics
+function getDailyStats($date) {
+    global $conn;
+    
+    // Total rentals for the day
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_rentals FROM bills WHERE DATE(start_time) = ?");
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $total_rentals = $stmt->get_result()->fetch_assoc()['total_rentals'];
+    
+    // Total revenue for the day
+    $stmt = $conn->prepare("SELECT COALESCE(SUM(total_amount), 0) as total_revenue FROM bills WHERE DATE(start_time) = ? AND status = 'closed'");
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $total_revenue = $stmt->get_result()->fetch_assoc()['total_revenue'];
+    
+    // Active rentals (bills that started today and are still open)
+    $stmt = $conn->prepare("SELECT COUNT(*) as active_rentals FROM bills WHERE DATE(start_time) = ? AND status = 'open'");
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $active_rentals = $stmt->get_result()->fetch_assoc()['active_rentals'];
+    
+    // Extra charges for the day
+    $stmt = $conn->prepare("SELECT COALESCE(SUM(extra_charges), 0) as extra_charges FROM bills WHERE DATE(start_time) = ? AND status = 'closed'");
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $extra_charges = $stmt->get_result()->fetch_assoc()['extra_charges'];
+    
+    return [
+        'total_rentals' => $total_rentals,
+        'total_revenue' => $total_revenue,
+        'active_rentals' => $active_rentals,
+        'extra_charges' => $extra_charges
+    ];
+}
+
+// Function to get monthly report data
+function getMonthlyReport($year, $month) {
+    global $conn;
+    
+    $sql = "SELECT b.*, bt.type_name 
+            FROM bills b 
+            JOIN bicycle_types bt ON b.bicycle_type_id = bt.id 
+            WHERE YEAR(b.start_time) = ? AND MONTH(b.start_time) = ?
+            ORDER BY b.start_time DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $year, $month);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+// Function to get monthly statistics
+function getMonthlyStats($year, $month) {
+    global $conn;
+    
+    // Total rentals for the month
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_rentals FROM bills WHERE YEAR(start_time) = ? AND MONTH(start_time) = ?");
+    $stmt->bind_param("ii", $year, $month);
+    $stmt->execute();
+    $total_rentals = $stmt->get_result()->fetch_assoc()['total_rentals'];
+    
+    // Total revenue for the month
+    $stmt = $conn->prepare("SELECT COALESCE(SUM(total_amount), 0) as total_revenue FROM bills WHERE YEAR(start_time) = ? AND MONTH(start_time) = ? AND status = 'closed'");
+    $stmt->bind_param("ii", $year, $month);
+    $stmt->execute();
+    $total_revenue = $stmt->get_result()->fetch_assoc()['total_revenue'];
+    
+    // Active rentals for the month
+    $stmt = $conn->prepare("SELECT COUNT(*) as active_rentals FROM bills WHERE YEAR(start_time) = ? AND MONTH(start_time) = ? AND status = 'open'");
+    $stmt->bind_param("ii", $year, $month);
+    $stmt->execute();
+    $active_rentals = $stmt->get_result()->fetch_assoc()['active_rentals'];
+    
+    // Extra charges for the month
+    $stmt = $conn->prepare("SELECT COALESCE(SUM(extra_charges), 0) as extra_charges FROM bills WHERE YEAR(start_time) = ? AND MONTH(start_time) = ? AND status = 'closed'");
+    $stmt->bind_param("ii", $year, $month);
+    $stmt->execute();
+    $extra_charges = $stmt->get_result()->fetch_assoc()['extra_charges'];
+    
+    return [
+        'total_rentals' => $total_rentals,
+        'total_revenue' => $total_revenue,
+        'active_rentals' => $active_rentals,
+        'extra_charges' => $extra_charges
+    ];
+}
+
+// Function to get popular bicycle types report
+function getPopularBicycleTypes($start_date = null, $end_date = null) {
+    global $conn;
+    
+    $sql = "SELECT bt.type_name, COUNT(b.id) as rental_count, COALESCE(SUM(b.total_amount), 0) as total_revenue
+            FROM bicycle_types bt
+            LEFT JOIN bills b ON bt.id = b.bicycle_type_id";
+    
+    if ($start_date && $end_date) {
+        $sql .= " AND DATE(b.start_time) BETWEEN ? AND ?";
+    }
+    
+    $sql .= " GROUP BY bt.id, bt.type_name
+              ORDER BY rental_count DESC, total_revenue DESC";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if ($start_date && $end_date) {
+        $stmt->bind_param("ss", $start_date, $end_date);
+    }
+    
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+// Function to get peak hours report
+function getPeakHoursReport($date) {
+    global $conn;
+    
+    $sql = "SELECT HOUR(start_time) as hour, COUNT(*) as rental_count
+            FROM bills 
+            WHERE DATE(start_time) = ?
+            GROUP BY HOUR(start_time)
+            ORDER BY hour";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+// Function to generate Report PDF
+function generateReportPDF($date) {
+    // Get report data
+    $daily_report = getDailyReport($date);
+    $daily_stats = getDailyStats($date);
+    
+    // Generate PDF content as HTML (without auto-print)
+    $htmlContent = generateDownloadablePDFContent($date, $daily_report, $daily_stats);
+    
+    // Set headers to force download as HTML file (user can save as PDF)
+    header('Content-Type: text/html; charset=utf-8');
+    header('Content-Disposition: attachment; filename="Daily_Report_' . $date . '.html"');
+    header('Cache-Control: no-cache, must-revalidate');
+    header('Pragma: no-cache');
+    
+    // Output HTML content
+    echo $htmlContent;
+    exit;
+}
+
+// Function to download daily report as HTML PDF (Alternative method)
+function downloadDailyReportPDF($date) {
+    // Get report data
+    $daily_report = getDailyReport($date);
+    $daily_stats = getDailyStats($date);
+    
+    // Set headers for HTML download that can be printed as PDF
+    header('Content-Type: text/html; charset=utf-8');
+    header('Content-Disposition: attachment; filename="Daily_Report_' . $date . '.html"');
+    header('Cache-Control: no-cache, must-revalidate');
+    
+    // Generate HTML content that auto-prints when opened
+    $html = generateDownloadablePDFContent($date, $daily_report, $daily_stats);
+    echo $html;
+}
+
+// Function to generate downloadable PDF HTML content (Simplified version)
+function generateDownloadablePDFContent($date, $daily_report, $daily_stats) {
+    ob_start();
+    ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Daily Report - <?php echo date('F d, Y', strtotime($date)); ?></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-box { border: 1px solid #ddd; padding: 15px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; }
+        @media print { body { margin: 0; } }
+    </style>
+    <!-- No auto-print - just download the file -->
+</head>
+<body>
+    <div class="header">
+        <h1>🚴 Bicycle Rental System</h1>
+        <h2>Daily Report</h2>
+        <p>Report Date: <?php echo date('F d, Y', strtotime($date)); ?></p>
+        <p>Generated: <?php echo date('F d, Y g:i A'); ?></p>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <h3>Total Rentals</h3>
+            <p style="font-size: 24px; font-weight: bold;"><?php echo $daily_stats['total_rentals']; ?></p>
+        </div>
+        <div class="stat-box">
+            <h3>Total Revenue</h3>
+            <p style="font-size: 24px; font-weight: bold; color: green;"><?php echo formatCurrency($daily_stats['total_revenue']); ?></p>
+        </div>
+        <div class="stat-box">
+            <h3>Active Rentals</h3>
+            <p style="font-size: 24px; font-weight: bold;"><?php echo $daily_stats['active_rentals']; ?></p>
+        </div>
+        <div class="stat-box">
+            <h3>Extra Charges</h3>
+            <p style="font-size: 24px; font-weight: bold; color: red;"><?php echo formatCurrency($daily_stats['extra_charges']); ?></p>
+        </div>
+    </div>
+    
+    <?php if (!empty($daily_report)): ?>
+    <h3>Transaction Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Bill No.</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Bike Type</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th>Base Amount</th>
+                <th>Extra Charges</th>
+                <th>Total</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($daily_report as $bill): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($bill['bill_number']); ?></td>
+                <td><?php echo htmlspecialchars($bill['customer_name']); ?></td>
+                <td><?php echo htmlspecialchars($bill['customer_phone']); ?></td>
+                <td><?php echo htmlspecialchars($bill['type_name']); ?></td>
+                <td><?php echo date('H:i', strtotime($bill['start_time'])); ?></td>
+                <td><?php echo $bill['end_time'] ? date('H:i', strtotime($bill['end_time'])) : '-'; ?></td>
+                <td><?php echo $bill['actual_minutes'] ? formatDuration($bill['actual_minutes']) : '-'; ?></td>
+                <td><?php echo formatCurrency($bill['base_price']); ?></td>
+                <td><?php echo formatCurrency($bill['extra_charges']); ?></td>
+                <td><strong><?php echo formatCurrency($bill['total_amount']); ?></strong></td>
+                <td><?php echo strtoupper($bill['status']); ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php else: ?>
+    <p style="text-align: center; padding: 40px; color: #666;">No transactions found for this date.</p>
+    <?php endif; ?>
+    
+    <div style="margin-top: 40px; text-align: center; border-top: 1px solid #ddd; padding-top: 20px;">
+        <p>Bicycle Rental System - <?php echo date('Y'); ?></p>
+    </div>
+</body>
+</html>
+    <?php
+    return ob_get_clean();
+}
+
+// Function to generate simple PDF content
+function generateSimplePDFContent($date, $daily_report, $daily_stats) {
+    $content = "BICYCLE RENTAL SYSTEM - DAILY REPORT\n";
+    $content .= "=====================================\n\n";
+    $content .= "Report Date: " . date('F d, Y', strtotime($date)) . "\n";
+    $content .= "Generated: " . date('F d, Y g:i A') . "\n\n";
+    
+    $content .= "DAILY STATISTICS\n";
+    $content .= "================\n";
+    $content .= "Total Rentals: " . $daily_stats['total_rentals'] . "\n";
+    $content .= "Total Revenue: " . formatCurrency($daily_stats['total_revenue']) . "\n";
+    $content .= "Active Rentals: " . $daily_stats['active_rentals'] . "\n";
+    $content .= "Extra Charges: " . formatCurrency($daily_stats['extra_charges']) . "\n\n";
+    
+    if (!empty($daily_report)) {
+        $content .= "TRANSACTION DETAILS\n";
+        $content .= "==================\n";
+        foreach ($daily_report as $bill) {
+            $content .= "Bill: " . $bill['bill_number'] . "\n";
+            $content .= "Customer: " . $bill['customer_name'] . " (" . $bill['customer_phone'] . ")\n";
+            $content .= "Bike Type: " . $bill['type_name'] . "\n";
+            $content .= "Start Time: " . date('H:i', strtotime($bill['start_time'])) . "\n";
+            $content .= "End Time: " . ($bill['end_time'] ? date('H:i', strtotime($bill['end_time'])) : 'Active') . "\n";
+            $content .= "Duration: " . ($bill['actual_minutes'] ? formatDuration($bill['actual_minutes']) : 'Active') . "\n";
+            $content .= "Base Amount: " . formatCurrency($bill['base_price']) . "\n";
+            $content .= "Extra Charges: " . formatCurrency($bill['extra_charges']) . "\n";
+            $content .= "Total Amount: " . formatCurrency($bill['total_amount']) . "\n";
+            $content .= "Status: " . strtoupper($bill['status']) . "\n";
+            $content .= "---\n";
+        }
+    } else {
+        $content .= "No transactions found for this date.\n";
+    }
+    
+    return $content;
+}
+
+// Function to generate PDF HTML content (Advanced version)
+function generatePDFHTMLContent($date, $daily_report, $daily_stats) {
+    ob_start();
+    ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Report - <?php echo date('F d, Y', strtotime($date)); ?></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: white;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #dc2626;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: #000;
+        }
+        .header h2 {
+            margin: 10px 0;
+            font-size: 20px;
+            color: #dc2626;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            border: 2px solid #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            background: #f9fafb;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #374151;
+            font-size: 16px;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 12px 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #111827;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            border-top: 2px solid #d1d5db;
+            padding-top: 20px;
+            color: #6b7280;
+        }
+        .no-print {
+            margin-bottom: 20px;
+        }
+        @media print {
+            .no-print { display: none; }
+            body { margin: 0; }
+        }
+    </style>
+    <script>
+        // Auto-print immediately when page loads
+        window.onload = function() {
+            window.print();
+        };
+        
+        // Alternative: trigger print after minimal delay
+        setTimeout(function() {
+            window.print();
+        }, 100);
+    </script>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🚴 Bicycle Rental System</h1>
+        <h2>Daily Report</h2>
+        <p><strong>Report Date:</strong> <?php echo date('F d, Y', strtotime($date)); ?></p>
+        <p><strong>Generated:</strong> <?php echo date('F d, Y g:i A'); ?></p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>🚴 Total Rentals</h3>
+            <div class="value"><?php echo $daily_stats['total_rentals']; ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>💰 Total Revenue</h3>
+            <div class="value" style="color: #16a34a;"><?php echo formatCurrency($daily_stats['total_revenue']); ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>⏱️ Active Rentals</h3>
+            <div class="value"><?php echo $daily_stats['active_rentals']; ?></div>
+        </div>
+        <div class="stat-card">
+            <h3>⚠️ Extra Charges</h3>
+            <div class="value" style="color: #dc2626;"><?php echo formatCurrency($daily_stats['extra_charges']); ?></div>
+        </div>
+    </div>
+
+    <?php if (empty($daily_report)): ?>
+        <div style="text-align: center; padding: 60px; color: #6b7280;">
+            <h3>📊 No Transactions Found</h3>
+            <p>No rental transactions were recorded for this date.</p>
+        </div>
+    <?php else: ?>
+        <h3 style="color: #000; border-bottom: 2px solid #dc2626; padding-bottom: 10px;">📋 Transaction Details</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Bill Number</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Bike Type</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration</th>
+                    <th>Base Amount</th>
+                    <th>Extra Charges</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($daily_report as $bill): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($bill['bill_number']); ?></td>
+                    <td>
+                        <strong><?php echo htmlspecialchars($bill['customer_name']); ?></strong><br>
+                        <small><?php echo htmlspecialchars($bill['customer_phone']); ?></small>
+                    </td>
+                    <td><?php echo htmlspecialchars($bill['customer_phone']); ?></td>
+                    <td><?php echo htmlspecialchars($bill['type_name']); ?></td>
+                    <td><?php echo date('H:i', strtotime($bill['start_time'])); ?></td>
+                    <td><?php echo $bill['end_time'] ? date('H:i', strtotime($bill['end_time'])) : '-'; ?></td>
+                    <td><?php echo $bill['actual_minutes'] ? formatDuration($bill['actual_minutes']) : '-'; ?></td>
+                    <td style="color: #16a34a; font-weight: bold;"><?php echo formatCurrency($bill['base_price']); ?></td>
+                    <td style="color: #dc2626; font-weight: bold;"><?php echo formatCurrency($bill['extra_charges']); ?></td>
+                    <td style="font-weight: bold;"><?php echo formatCurrency($bill['total_amount']); ?></td>
+                    <td>
+                        <?php if ($bill['status'] == 'open'): ?>
+                            <span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 12px; font-size: 12px;">ACTIVE</span>
+                        <?php else: ?>
+                            <span style="background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 12px; font-size: 12px;">COMPLETED</span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+
+    <div class="footer">
+        <p><strong>Bicycle Rental System</strong> - Professional Rental Management</p>
+        <p>Generated on <?php echo date('F d, Y \a\t g:i A'); ?></p>
+    </div>
+</body>
+</html>
+    <?php
+    return ob_get_clean();
 }
 
 // JavaScript Functions (Output as script tags when needed)

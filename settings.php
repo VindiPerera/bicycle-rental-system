@@ -138,14 +138,10 @@ include 'inc/header.php';
                         </form>
 
                         <!-- Remove Button -->
-                        <form method="POST" class="inline">
-                            <input type="hidden" name="action" value="delete_bicycle_type">
-                            <input type="hidden" name="type_id" value="<?php echo $type['id']; ?>">
-                            <button type="submit" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 font-semibold text-sm"
-                                    onclick="return confirm('Are you sure you want to delete this bicycle type? This action cannot be undone!')">
-                                Remove
-                            </button>
-                        </form>
+                        <button onclick="showDeleteConfirm(<?php echo $type['id']; ?>, '<?php echo htmlspecialchars($type['type_name']); ?>')" 
+                                class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 font-semibold text-sm">
+                            Remove
+                        </button>
 
                     </div>
 
@@ -220,7 +216,42 @@ include 'inc/header.php';
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                </div>
+            </div>
+           
+        </div>
+        
+        <div class="mb-6">
+            <p class="text-sm text-gray-700">
+                Are you sure you want to delete this bicycle type? This action cannot be undone!
+            </p>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button type="button" onclick="closeDeleteModal()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmDelete()" 
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
+let deleteTypeId = null;
+
 function hideMessage() {
     const alert = document.getElementById('messageAlert');
     if (alert) {
@@ -228,6 +259,30 @@ function hideMessage() {
         setTimeout(function() {
             alert.style.display = 'none';
         }, 500);
+    }
+}
+
+function showDeleteConfirm(typeId, typeName) {
+    deleteTypeId = typeId;
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    deleteTypeId = null;
+}
+
+function confirmDelete() {
+    if (deleteTypeId) {
+        // Create and submit form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="delete_bicycle_type">
+            <input type="hidden" name="type_id" value="${deleteTypeId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 

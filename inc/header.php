@@ -34,6 +34,9 @@
                         <a href="settings.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'border-red-500 text-red-600' : 'border-transparent text-black hover:text-red-600 hover:border-red-300'; ?> inline-flex items-center px-2 pt-1 border-b-3 text-lg font-bold">
                             Settings
                         </a>
+                         <a href="report.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'report.php' ? 'border-red-500 text-red-600' : 'border-transparent text-black hover:text-red-600 hover:border-red-300'; ?> inline-flex items-center px-2 pt-1 border-b-3 text-lg font-bold">
+                            Report
+                        </a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-6">
