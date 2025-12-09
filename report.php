@@ -26,16 +26,9 @@ include 'inc/header.php';
 
 <div class="px-8 py-8">
     <!-- Page Header -->
-    <div class="mb-8 bg-gradient-to-r from-red-50 to-white p-6 rounded-xl border border-red-100 shadow-sm">
-        <div class="flex items-center space-x-3">
-            <div class="bg-red-500 p-3 rounded-full shadow-lg">
-                <span class="text-white text-2xl">📊</span>
-            </div>
-            <div>
-                <h1 class="text-4xl font-bold text-black bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">Daily Reports</h1>
-                <p class="mt-2 text-gray-600 text-lg font-medium">View daily rental statistics and transactions</p>
-            </div>
-        </div>
+     <div class="mb-12">
+        <h1 class="text-4xl font-bold text-black">Daily Reports</h1>
+        <p class="mt-3 text-gray-700 text-lg">View daily rental statistics and transactions</p>
     </div>
 
     <!-- Date Selection -->
@@ -45,9 +38,7 @@ include 'inc/header.php';
             <form method="GET" action="report.php" class="flex items-center space-x-4">
                 <input type="date" name="date" value="<?php echo $selected_date; ?>" 
                        class="p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 font-medium">
-                <button type="submit" class="bg-gradient-to-r from-black to-gray-800 text-white px-6 py-3 rounded-xl hover:from-gray-800 hover:to-black font-bold transition-all duration-200">
-                    📊 View Report
-                </button>
+                
                 <button type="submit" name="generate_pdf" value="1" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl hover:from-red-600 hover:to-red-700 font-bold transition-all duration-200">
                     📄 Generate Report
                 </button>

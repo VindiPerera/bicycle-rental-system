@@ -438,7 +438,10 @@ function handlePostActions() {
                     break;
                     
                 case 'close_rental':
-                    $result = handleCloseRental($_POST['order_id'], $_SESSION['user_id']);
+                case 'end_rental':
+                    // Handle both close_rental and end_rental actions
+                    $order_id = isset($_POST['order_id']) ? $_POST['order_id'] : $_POST['bill_id'];
+                    $result = handleCloseRental($order_id, $_SESSION['user_id']);
                     $message = $result['message'];
                     $message_type = $result['type'];
                     break;
@@ -732,24 +735,7 @@ function generateDownloadablePDFContent($date, $daily_report, $daily_stats) {
         <p>Generated: <?php echo date('F d, Y g:i A'); ?></p>
     </div>
     
-    <div class="stats">
-        <div class="stat-box">
-            <h3>Total Rentals</h3>
-            <p style="font-size: 24px; font-weight: bold;"><?php echo $daily_stats['total_rentals']; ?></p>
-        </div>
-        <div class="stat-box">
-            <h3>Total Revenue</h3>
-            <p style="font-size: 24px; font-weight: bold; color: green;"><?php echo formatCurrency($daily_stats['total_revenue']); ?></p>
-        </div>
-        <div class="stat-box">
-            <h3>Active Rentals</h3>
-            <p style="font-size: 24px; font-weight: bold;"><?php echo $daily_stats['active_rentals']; ?></p>
-        </div>
-        <div class="stat-box">
-            <h3>Extra Charges</h3>
-            <p style="font-size: 24px; font-weight: bold; color: red;"><?php echo formatCurrency($daily_stats['extra_charges']); ?></p>
-        </div>
-    </div>
+    <!-- Statistics removed for clean report display -->
     
     <?php if (!empty($daily_report)): ?>
     <h3>Transaction Details</h3>
