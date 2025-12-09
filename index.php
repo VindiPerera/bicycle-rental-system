@@ -20,14 +20,6 @@ $all_bills = getAllBills(20);
 include 'inc/header.php';
 ?>
 
-<style>
-.view-container {
-    transition: opacity 0.3s ease-in-out;
-}
-.view-container.hidden {
-    display: none;
-}
-</style>
 
 <div class="px-4 py-4">
     <!-- Page Header -->
@@ -48,238 +40,207 @@ include 'inc/header.php';
     </div>
     <?php endif; ?>
 
-    <!-- View Toggle Controls -->
-    <div class="mb-4">
-        <div class="flex justify-center">
-            <div class="bg-gray-200 p-1 rounded-lg inline-flex space-x-1">
-                <button id="addRentalToggle" onclick="showAddRentalView()" 
-                        class="px-6 py-2 rounded-lg font-bold transition-all duration-200 bg-black text-white text-sm">
-                    🚴 Add Rental
-                </button>
-                <button id="openBikesToggle" onclick="showOpenBikesView()" 
-                        class="px-6 py-2 rounded-lg font-bold transition-all duration-200 bg-gray-300 text-gray-700 hover:bg-gray-400 text-sm">
-                    🚴‍♂️ Open Bikes <span class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full"><?php echo count($open_bills); ?></span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Rental View -->
-    <div id="addRentalView" class="view-container">
-        <div class="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-        <div class="flex items-center mb-4">
-            <span class="text-2xl mr-3">🚴</span>
-            <h2 class="text-xl font-bold text-black">Add Bicycle to Open Bikes (Start Rental)</h2>
-        </div>
+    <!-- Main Dashboard Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        <!-- Step 1: Select Bicycle Type -->
-        <div class="mb-6">
-            <label class="block text-lg font-bold text-black mb-3">Step 1: Select Bicycle Type</label>
-            <button id="selectBicycleTypeBtn" onclick="openBicycleTypeModal()" 
-                    class="w-full bg-red-500 text-white py-4 px-6 rounded-lg hover:bg-red-600 font-bold text-lg border border-red-600">
-                🚴‍♂️ Choose Bicycle Type
-            </button>
-            <div id="selectedTypeDisplay" class="mt-4 hidden">
-                <div class="bg-white border border-red-500 rounded-lg p-4">
-                    <div class="flex justify-between items-center">
-                        <div id="selectedTypeInfo" class="text-black font-semibold"></div>
-                        <button onclick="openBicycleTypeModal()" class="text-red-600 hover:text-red-800 font-bold">
-                            Change
-                        </button>
+        <!-- Left Side: Add Rental -->
+        <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+            <div class="flex items-center mb-6">
+                <div class="bg-red-500 text-white p-2 rounded-lg mr-3">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">Start New Rental</h2>
+                    <p class="text-xs text-gray-600">Add bicycle to active rentals</p>
+                </div>
+            </div>
+            <!-- Step 1: Select Bicycle Type -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Select Bicycle Type</h3>
+                <button id="selectBicycleTypeBtn" onclick="openBicycleTypeModal()" 
+                        class="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 font-medium text-sm transition-colors">
+                    Choose Bicycle Type
+                </button>
+                <div id="selectedTypeDisplay" class="mt-3 hidden">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div class="flex justify-between items-center">
+                            <div id="selectedTypeInfo" class="text-gray-900 font-medium text-sm"></div>
+                            <button onclick="openBicycleTypeModal()" class="text-red-600 hover:text-red-700 font-medium text-sm">
+                                Change
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Step 2: Enter Customer Details -->
-        <div id="userDetailsForm" class="mb-8 hidden">
-            <div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200 mb-6 shadow-inner">
-                <div class="flex items-center mb-6">
-                    <div class="bg-black text-white w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold mr-4 shadow-lg">
-                        2
-                    </div>
-                    <h3 class="text-2xl font-bold text-black">Enter Customer Details</h3>
-                </div>
+            <!-- Step 2: Enter Customer Details -->
+            <div id="userDetailsForm" class="hidden">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Details</h3>
                 
-                <form method="POST" class="space-y-6">
+                <form method="POST" class="space-y-4">
                     <input type="hidden" name="action" value="confirm_order">
                     <input type="hidden" name="bicycle_type_id" id="selectedBicycleTypeId">
-                    <!-- Payment Method - Hidden field set to cash -->
                     <input type="hidden" name="payment_method" value="cash">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="space-y-2">
-                            <label class="flex items-center text-sm font-bold text-black mb-3">
-                                <span class="bg-red-500 text-white p-1.5 rounded-full mr-3 shadow-sm">
-                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </span>
-                                Customer Name
-                            </label>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
                             <input type="text" name="customer_name" required 
-                                   class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md font-medium"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                                    placeholder="Enter full name">
                         </div>
                         
-                        <div class="space-y-2">
-                            <label class="flex items-center text-sm font-bold text-black mb-3">
-                                <span class="bg-red-500 text-white p-1.5 rounded-full mr-3 shadow-sm">
-                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
-                                    </svg>
-                                </span>
-                                Phone Number
-                            </label>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                             <input type="tel" name="customer_phone" required 
-                                   class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md font-medium"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                                    placeholder="Enter phone number">
                         </div>
                         
-                        <div class="space-y-2">
-                            <label class="flex items-center text-sm font-bold text-black mb-3">
-                                <span class="bg-red-500 text-white p-1.5 rounded-full mr-3 shadow-sm">
-                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </span>
-                                NIC Number
-                            </label>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">NIC Number</label>
                             <input type="text" name="customer_nic" required 
-                                   class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md font-medium"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                                    placeholder="Enter NIC number">
                         </div>
                     </div>
                     
-                    <!-- Payment Method Display -->
-                    <div class="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <span class="bg-green-500 text-white p-2 rounded-full mr-4 shadow-sm">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"></path>
-                                    </svg>
-                                </span>
-                                <div>
-                                    <p class="text-sm font-bold text-black">Payment Method</p>
-                                    <p class="text-xs text-gray-600">Automatically set to cash payment</p>
-                                </div>
-                            </div>
-                            <div class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-bold">
-                                💵 Cash Payment
-                            </div>
-                        </div>
-                    </div>
                     
-                    <div class="flex justify-center pt-6">
+                    <div class="pt-4">
                         <button type="submit" name="action" value="confirm_order" 
-                                class="bg-gradient-to-r from-black to-gray-800 text-white py-4 px-12 rounded-xl hover:from-gray-800 hover:to-black font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border-2 border-black">
-                            <span class="flex items-center">
-                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                </svg>
-                                Confirm Order & Process Payment
-                            </span>
+                                class="w-full bg-gray-900 text-white py-3 px-4 rounded-lg hover:bg-gray-800 font-medium text-sm transition-colors">
+                            Start Rental
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+        
+        <!-- Right Side: Open Bikes Cards -->
+        <div class="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <div class="bg-gray-900 text-white p-2 rounded-lg mr-3">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Active Rentals</h2>
+                        <p class="text-xs text-gray-600">Currently rented bicycles</p>
+                    </div>
+                </div>
+                <span class="bg-red-100 text-red-800 text-xs font-medium px-3 py-1 rounded-full">
+                    <?php echo count($open_bills); ?> Active
+                </span>
+            </div>
+            
+            <div class="space-y-4 max-h-96 overflow-y-auto">
+                <?php if (empty($open_bills)): ?>
+                    <div class="text-center py-8">
+                        <div class="text-4xl mb-3">🚴‍♂️</div>
+                        <p class="text-gray-500">No active rentals</p>
+                        <p class="text-gray-400 text-sm mt-1">Start a new rental to see it here</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($open_bills as $bill): ?>
+                        <?php
+                        $start_time = new DateTime($bill['start_time']);
+                        $current_time = new DateTime();
+                        $elapsed_minutes = ($current_time->getTimestamp() - $start_time->getTimestamp()) / 60;
+                        $is_overtime = $elapsed_minutes > $bill['base_minutes'];
+                        ?>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow <?php echo $is_overtime ? 'border-red-300 bg-red-50' : ''; ?>">
+                            <!-- Card Header -->
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-6 h-6 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full flex items-center justify-center mr-2">
+                                        <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900 text-sm"><?php echo htmlspecialchars($bill['customer_name']); ?></h3>
+                                        <p class="text-xs text-gray-500"><?php echo htmlspecialchars($bill['customer_phone']); ?></p>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                                    #<?php echo htmlspecialchars($bill['bill_number']); ?>
+                                </span>
+                            </div>
+                            
+                            <!-- Rental Details -->
+                            <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                                <div class="grid grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                        <span class="text-gray-500 block mb-1">🚴 Bike Type</span>
+                                        <p class="font-medium text-gray-900"><?php echo htmlspecialchars($bill['type_name'] ?? 'N/A'); ?></p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500 block mb-1">🕒 Started</span>
+                                        <p class="font-medium text-gray-900"><?php echo date('H:i', strtotime($bill['start_time'])); ?></p>
+                                        <p class="text-gray-400"><?php echo date('M d', strtotime($bill['start_time'])); ?></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3 pt-3 border-t border-gray-200">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500 text-xs">⏱️ Duration</span>
+                                        <span class="font-semibold <?php echo $is_overtime ? 'text-red-600' : 'text-gray-600'; ?> text-sm">
+                                            <?php echo formatDuration(floor($elapsed_minutes)); ?>
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-1">
+                                        <span class="text-gray-400 text-xs">Base time</span>
+                                        <span class="text-gray-600 text-xs"><?php echo formatDuration($bill['base_minutes']); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Status & Action -->
+                            <?php if ($is_overtime): ?>
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
+                                    <div class="flex items-center">
+                                        <span class="text-red-500 mr-2">⚠️</span>
+                                        <div>
+                                            <p class="text-red-700 text-xs font-medium">Overtime Active</p>
+                                            <p class="text-red-600 text-xs">Extra charges: <?php echo formatCurrency($bill['extra_charge_per_minute']); ?>/min</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-2 mb-3">
+                                    <div class="flex items-center">
+                                        <span class="text-black-500 mr-2">✅</span>
+                                        <p class="text-white-700 text-xs font-medium">On Time</p>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <form method="POST" class="w-full">
+                                <input type="hidden" name="action" value="close_rental">
+                                <input type="hidden" name="order_id" value="<?php echo $bill['id']; ?>">
+                                <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 px-4 rounded-lg hover:from-red-600 hover:to-red-700 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md">
+                                    <span class="flex items-center justify-center">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                        </svg>
+                                        End Rental
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
-    <!-- Open Bikes View -->
-    <div id="openBikesView" class="view-container hidden">
-        <div class="max-w-7xl mx-auto bg-white shadow-lg rounded-xl p-6 border-2 border-gray-200">
-        <div class="flex items-center mb-4">
-            <span class="text-2xl mr-3">🚴‍♂️</span>
-            <h2 class="text-xl font-bold text-black">Open Bikes</h2>
-            <span class="ml-auto bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                <?php echo count($open_bills); ?> Active
-            </span>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <?php if (empty($open_bills)): ?>
-                <div class="text-center py-12">
-                    <div class="text-6xl mb-4">🚴‍♂️</div>
-                    <p class="text-gray-600 text-xl">No bikes currently rented</p>
-                    <p class="text-gray-500 mt-2">Click "Add Rent Bike" to start a new rental</p>
-                </div>
-            <?php else: ?>
-                <table class="w-full border-collapse shadow-lg rounded-lg overflow-hidden">
-                    <thead>
-                        <tr class="bg-black text-white">
-                            <th class="text-left py-3 px-4 font-semibold text-sm">Customer Details</th>
-                            <th class="text-left py-3 px-4 font-semibold text-sm">Bill ID</th>
-                            <th class="text-left py-3 px-4 font-semibold text-sm">Bike Type</th>
-                            <th class="text-left py-3 px-4 font-semibold text-sm">Start Time</th>
-                            <th class="text-left py-3 px-4 font-semibold text-sm">Duration</th>
-                            <th class="text-left py-3 px-4 font-semibold text-sm">Status</th>
-                            <th class="text-center py-3 px-4 font-semibold text-sm">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($open_bills as $bill): ?>
-                            <?php
-                            $start_time = new DateTime($bill['start_time']);
-                            $current_time = new DateTime();
-                            $elapsed_minutes = ($current_time->getTimestamp() - $start_time->getTimestamp()) / 60;
-                            $is_overtime = $elapsed_minutes > $bill['base_minutes'];
-                            ?>
-                            <tr class="border-b border-gray-200 hover:bg-gray-50 <?php echo $is_overtime ? 'bg-red-50' : ''; ?> transition-colors">
-                                <td class="py-3 px-4">
-                                    <div>
-                                        <div class="font-bold text-black text-sm"><?php echo htmlspecialchars($bill['customer_name']); ?></div>
-                                        <div class="text-gray-600 text-xs"><?php echo htmlspecialchars($bill['customer_phone']); ?></div>
-                                        <?php if (!empty($bill['customer_nic'])): ?>
-                                        <div class="text-gray-500 text-xs">NIC: <?php echo htmlspecialchars($bill['customer_nic']); ?></div>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <div class="font-mono font-bold text-black text-sm"><?php echo htmlspecialchars($bill['bill_number']); ?></div>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold"><?php echo htmlspecialchars($bill['type_name']); ?></span>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <div class="text-gray-700 font-bold text-sm"><?php echo date('H:i', strtotime($bill['start_time'])); ?></div>
-                                    <div class="text-gray-500 text-xs"><?php echo date('M d', strtotime($bill['start_time'])); ?></div>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <div>
-                                        <span class="<?php echo $is_overtime ? 'text-red-600 font-bold text-sm' : 'text-gray-700 font-bold text-sm'; ?>">
-                                            <?php echo formatDuration($elapsed_minutes); ?>
-                                        </span>
-                                        <div class="text-gray-500 text-xs">of <?php echo formatDuration($bill['base_minutes']); ?></div>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-4">
-                                    <?php if ($is_overtime): ?>
-                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">⏰ Overtime</span>
-                                    <?php else: ?>
-                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">✅ On Time</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="py-3 px-4 text-center">
-                                    <form method="post" class="inline" id="closeForm_<?php echo $bill['id']; ?>">
-                                        <input type="hidden" name="order_id" value="<?php echo $bill['id']; ?>">
-                                        <button type="button" 
-                                                class="bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-800 font-bold text-sm transition-colors shadow-md"
-                                                onclick="showCloseConfirmModal(<?php echo $bill['id']; ?>, '<?php echo htmlspecialchars($bill['bill_number']); ?>', '<?php echo htmlspecialchars($bill['customer_name']); ?>')">
-                                            Close Rental
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-        </div>
-    </div>
+
+
+
 
         <!-- Receipt Modal -->
         <?php if (isset($_SESSION['last_bill_id']) && $message_type == 'success'): ?>
@@ -550,42 +511,6 @@ unset($_SESSION['rental_calculation']); // Clear after use
 <script>
 // Global variables
 let selectedBicycleType = null;
-let currentView = 'addRental'; // Default view
-
-// View Toggle Functions
-function showAddRentalView() {
-    // Hide open bikes view
-    document.getElementById('openBikesView').classList.add('hidden');
-    
-    // Show add rental view
-    document.getElementById('addRentalView').classList.remove('hidden');
-    
-    // Update toggle buttons
-    document.getElementById('addRentalToggle').classList.remove('bg-gray-300', 'text-gray-700');
-    document.getElementById('addRentalToggle').classList.add('bg-black', 'text-white');
-    
-    document.getElementById('openBikesToggle').classList.remove('bg-black', 'text-white');
-    document.getElementById('openBikesToggle').classList.add('bg-gray-300', 'text-gray-700');
-    
-    currentView = 'addRental';
-}
-
-function showOpenBikesView() {
-    // Hide add rental view
-    document.getElementById('addRentalView').classList.add('hidden');
-    
-    // Show open bikes view
-    document.getElementById('openBikesView').classList.remove('hidden');
-    
-    // Update toggle buttons
-    document.getElementById('openBikesToggle').classList.remove('bg-gray-300', 'text-gray-700');
-    document.getElementById('openBikesToggle').classList.add('bg-black', 'text-white');
-    
-    document.getElementById('addRentalToggle').classList.remove('bg-black', 'text-white');
-    document.getElementById('addRentalToggle').classList.add('bg-gray-300', 'text-gray-700');
-    
-    currentView = 'openBikes';
-}
 
 // Bicycle Type Modal Functions
 function openBicycleTypeModal() {
@@ -615,8 +540,8 @@ function selectBicycleType(type) {
     
     // Update button text
     document.getElementById('selectBicycleTypeBtn').innerHTML = '✅ Bicycle Type Selected - ' + type.type_name;
-    document.getElementById('selectBicycleTypeBtn').classList.remove('bg-red-500', 'hover:bg-red-600');
-    document.getElementById('selectBicycleTypeBtn').classList.add('bg-green-500', 'hover:bg-green-600');
+    document.getElementById('selectBicycleTypeBtn').classList.remove('bg-black-500', 'hover:bg-black-600');
+    document.getElementById('selectBicycleTypeBtn').classList.add('bg-black-500', 'hover:bg-black-600');
     
     // Close modal
     closeBicycleTypeModal();
@@ -796,13 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hideMessage();
         }, 5000);
         
-        // If there's a success message and receipt modal, switch to open bikes view
-        const receiptModal = document.getElementById('receiptModal');
-        if (receiptModal && messageAlert.classList.contains('bg-green-50')) {
-            setTimeout(function() {
-                showOpenBikesView();
-            }, 1000); // Switch after 1 second
-        }
+        // No need to switch views since we're using single page layout
     }
     
     // Bicycle Type Modal - Close when clicking outside
